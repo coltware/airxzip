@@ -180,6 +180,11 @@ package com.coltware.airxzip {
 			}
 			
 			if(entry.isEncrypted()){
+				
+				if(this._password == null){
+					throw new ZipError("password is NULL");
+				}
+				
 				// @TODO 現在はZipCryptoとみなす
 				var decrypt:ZipCrypto = new ZipCrypto();
 				//  @TODO 
@@ -201,7 +206,7 @@ package com.coltware.airxzip {
 				bytes.uncompress(CompressionAlgorithm.DEFLATE);
 			}
 			else{
-				throw new Error("not support compress method : " + method);
+				throw new ZipError("not support compress method : " + method);
 			}
 			return bytes;
 		}
@@ -254,19 +259,28 @@ package com.coltware.airxzip {
 				_stream.readBytes(bytes,0,size);
 			}
 			
+			var err:ZipErrorEvent;
+			
 			if(entry.isEncrypted()){
-                // @TODO 現在はZipCryptoとみなす
-                var decrypt:ZipCrypto = new ZipCrypto();
-                //  @TODO 
-                //  ここにチェック用のフラグが入る
-                var check:int = 0;
-                
-                var cryptoHader:ByteArray = new ByteArray();
-                bytes.readBytes(cryptoHader,0,ZipCrypto.CRYPTHEADLEN);
-                var check2:int = decrypt.initDecrypt(this._password,cryptoHader);
-                
-                bytes = decrypt.decrypt(bytes);
-            }
+				
+				if(this._password == null){
+					err = new ZipErrorEvent(ZipErrorEvent.ZIP_PASSWORD_ERROR);
+					this.dispatchEvent(err);
+					return;
+				}
+				
+        // @TODO 現在はZipCryptoとみなす
+        var decrypt:ZipCrypto = new ZipCrypto();
+        //  @TODO 
+        //  ここにチェック用のフラグが入る
+        var check:int = 0;
+        
+        var cryptoHader:ByteArray = new ByteArray();
+        bytes.readBytes(cryptoHader,0,ZipCrypto.CRYPTHEADLEN);
+        var check2:int = decrypt.initDecrypt(this._password,cryptoHader);
+        
+        bytes = decrypt.decrypt(bytes);
+      }
 			
 			var method:int = entry.getCompressMethod();
 			if(method == ZipEntry.METHOD_NONE){
@@ -276,7 +290,9 @@ package com.coltware.airxzip {
 				event.$method = CompressionAlgorithm.DEFLATE;
 			}
 			else{
-				throw new Error("not support compress method : " + method);
+				var e:ZipErrorEvent = new ZipErrorEvent(ZipErrorEvent.ZIP_NO_SUCH_METHOD);
+				this.dispatchEvent(e);
+				return;
 			}
 			
 			event.$entry = entry;
