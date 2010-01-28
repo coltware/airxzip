@@ -4,10 +4,9 @@
 <classEntry path="com.coltware.airxzip.ZipEvent"/>
 <classEntry path="com.coltware.airxzip.ZipEndRecord"/>
 <classEntry path="com.coltware.airxzip.ZipError"/>
-<classEntry path="com.coltware.airxzip.ZipErrorEvent"/>
 <classEntry path="com.coltware.airxzip.ZipFileReader"/>
+<classEntry path="com.coltware.airxzip.ZipErrorEvent"/>
 <classEntry path="com.coltware.airxzip.ZipHeader"/>
-<classEntry path="com.coltware.airxzip.ZipCrypto"/>
 <classEntry path="com.coltware.airxzip.ZipCRC32"/>
 <classEntry path="com.coltware.airxzip.ZipFileWriter"/>
 <classEntry path="com.coltware.airxzip.ZipEntry"/>

@@ -6,36 +6,57 @@
  *
  * @author coltware@gmail.com
  */
-package com.coltware.airxzip {
+package com.coltware.airxzip.crypt {
+	
+	import com.coltware.airxzip.ZipCRC32;
+	import com.coltware.airxzip.ZipEntry;
+	import com.coltware.airxzip.ZipError;
+	import com.coltware.airxzip.ZipHeader;
+	import com.coltware.airxzip.zip_internal;
 	
 	import flash.utils.*;
+	
 	import mx.logging.*;
 	
-	public class ZipCrypto {
+	use namespace zip_internal;
+	
+	public class ZipCrypto implements ICrypto{
 		
-		private static var log:ILogger = Log.getLogger("com.coltware.airxzip.ZipCrypto");
+		private static var log:ILogger = Log.getLogger("com.coltware.airxzip.crypt.ZipCrypto");
 		
-		public static var CRYPTHEADLEN:int = 12;
+		private static var CRYPTHEADLEN:int = 12;
         
-        // Initial keys
-        private static var S_KEY1:int = 305419896;
-        private static var S_KEY2:int = 591751049;
-        private static var S_KEY3:int = 878082192;
+    // Initial keys
+    private static var S_KEY1:int = 305419896;
+    private static var S_KEY2:int = 591751049;
+    private static var S_KEY3:int = 878082192;
         
-        private var _key:Array;
+    private var _key:Array;
+		private var _password:ByteArray;
+		private var _header:ZipHeader;
+		
+		private var _outBytes:ByteArray;
 		
 		public function ZipCrypto() {
 			
 		}
+		
+		public function initEncrypt(password:ByteArray,header:ZipHeader):void{
+			var crc32:uint = header._crc32;
+			_outBytes = new ByteArray();
+			_initEncrypt(password,crc32);
+			
+		}
+		
 		/**
 		*  暗号時に使用する初期化処理
 		*
 		*/
-		public function initCrypt(password:ByteArray,crc32:uint):ByteArray{
+		private function _initEncrypt(password:ByteArray,crc32:uint):void{
             
-            crc32 = crc32 >> 24;
+          	crc32 = crc32 >> 24;
             
-            var ret:ByteArray = new ByteArray();
+            var ret:ByteArray = _outBytes;
             _key = new Array(3);
             _key[0] = S_KEY1;
             _key[1] = S_KEY2;
@@ -58,31 +79,52 @@ package com.coltware.airxzip {
                 ret.writeByte(d);
             }
             
-            ret.position = 0;
-            return ret;
         }
         
         /**
-        *  データを暗号化する
-        *
+        *  encrypt data
         */
         public function encrypt(data:ByteArray):ByteArray{
             
-            var out:ByteArray = new ByteArray();
             data.position = 0;
             while(data.bytesAvailable){
                 var n:uint = data.readUnsignedByte();
-                out.writeByte(zencode(n));
+                _outBytes.writeByte(zencode(n));
             }
-            out.position = 0;
+            _outBytes.position = 0;
             
-            return out;
+            return _outBytes;
         }
+        
+        public function checkDecrypt(entry:ZipEntry):Boolean{
+        	return true;
+        }
+        
+        public function initDecrypt(password:ByteArray,header:ZipHeader):void{
+        	this._password = password;
+        	this._header = header;
+        }
+        
+        public function decrypt(data:ByteArray):ByteArray{
+        	var check1:uint = _header._crc32 >>> 24;
+        	var cryptoHeader:ByteArray = new ByteArray();
+        	data.readBytes(cryptoHeader,0,CRYPTHEADLEN);
+        	var check2:uint = _initDecrypt(this._password,cryptoHeader);
+        	check2 = (check2 & 0xffff);
+        	if(check1 == check2){
+        		return _decrypt(data);	
+        	}
+        	else{
+        		throw new ZipError("password is not match");
+        	}
+        	
+        }
+        
         /**
         *  解凍時に使用する初期化処理
         *
         */
-        public function initDecrypt(password:ByteArray,cryptHeader:ByteArray):uint{
+        private function _initDecrypt(password:ByteArray,cryptHeader:ByteArray):uint{
             
             var ret:ByteArray = new ByteArray();
             _key = new Array(3);
@@ -108,7 +150,7 @@ package com.coltware.airxzip {
         *  解凍処理
         *
         */
-        public function decrypt(data:ByteArray):ByteArray{
+        private function _decrypt(data:ByteArray):ByteArray{
         	        	
         	var out:ByteArray = new ByteArray();
         	while(data.bytesAvailable > 0 ){
@@ -155,7 +197,6 @@ package com.coltware.airxzip {
         *
         */
         protected function updateKeys(uchar:uint):void{
-        	
             _key[0] = ZipCRC32.getCRC32(_key[0],uchar);
             _key[1] = _key[1] + (_key[0] & 0xFF);
             

@@ -8,6 +8,8 @@
  */
 package com.coltware.airxzip {
 	
+	import com.coltware.airxzip.crypt.ZipCrypto;
+	
 	import flash.events.*;
 	import flash.filesystem.*;
 	import flash.system.*;
@@ -386,8 +388,9 @@ package com.coltware.airxzip {
 				
 				if(_isCrypt){
 					var enc:ZipCrypto = new ZipCrypto();
-					var cryptHeader:ByteArray = enc.initCrypt(_password,header._crc32);
-					_stream.writeBytes(cryptHeader);
+					enc.initDecrypt(_password,header);
+					//var cryptHeader:ByteArray = enc.initCrypt(_password,header._crc32);
+					//_stream.writeBytes(cryptHeader);
 					_stream.writeBytes(enc.encrypt(data));
 				}
 				else{
