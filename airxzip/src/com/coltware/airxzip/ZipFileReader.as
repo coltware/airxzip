@@ -8,6 +8,8 @@
  */
 package com.coltware.airxzip {
 	
+	import com.coltware.airxzip.crypt.ZipCrypto;
+	
 	import flash.events.*;
 	import flash.filesystem.*;
 	import flash.utils.*;
@@ -187,19 +189,8 @@ package com.coltware.airxzip {
 				
 				// @TODO 現在はZipCryptoとみなす
 				var decrypt:ZipCrypto = new ZipCrypto();
-				
-        var check:int = lzh._crc32 >>> 24;
-                
-        var cryptoHader:ByteArray = new ByteArray();
-        bytes.readBytes(cryptoHader,0,ZipCrypto.CRYPTHEADLEN);
-        var check2:int = decrypt.initDecrypt(this._password,cryptoHader);
-        check2 = (check2 & 0xffff);
-        if(check == check2){
-        	bytes = decrypt.decrypt(bytes);
-        }
-        else{
-        	 throw new ZipError("password is not match");
-        }
+				decrypt.initDecrypt(this._password,lzh);
+				bytes = decrypt.decrypt(bytes);
 			}
 			
 			var method:int = entry.getCompressMethod();
@@ -275,19 +266,13 @@ package com.coltware.airxzip {
 				
         // @TODO 現在はZipCryptoとみなす
         var decrypt:ZipCrypto = new ZipCrypto();
-        var check:int = lzh._crc32 >>> 24;
-        
-        var cryptoHader:ByteArray = new ByteArray();
-        bytes.readBytes(cryptoHader,0,ZipCrypto.CRYPTHEADLEN);
-        var check2:int = decrypt.initDecrypt(this._password,cryptoHader);
-        check2 = (check2 & 0xffff);
-        if(check == check2){
+        decrypt.initDecrypt(this._password,lzh);
+        try{
         	bytes = decrypt.decrypt(bytes);
         }
-        else{
+        catch(ze:ZipError){
         	err = new ZipErrorEvent(ZipErrorEvent.ZIP_PASSWORD_ERROR);
         	this.dispatchEvent(err);
-        	return;
         }
       }
 			
