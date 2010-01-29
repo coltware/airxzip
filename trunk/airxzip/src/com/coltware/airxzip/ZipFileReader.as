@@ -8,6 +8,9 @@
  */
 package com.coltware.airxzip {
 	
+	import __AS3__.vec.Vector;
+	
+	import com.coltware.airxzip.crypt.ICrypto;
 	import com.coltware.airxzip.crypt.ZipCrypto;
 	
 	import flash.events.*;
@@ -37,10 +40,11 @@ package com.coltware.airxzip {
 		private var _unzipWorking:Boolean = false;
 		private var _unzipNum:int = 0;
 		
-		
 		private var _endRecord:ZipEndRecord;
 		private var _entries:Array;
 		private var _totalEntries:uint = 0;
+		
+		private var _decryptors:Array;
 		
 		/* 暗号化されているときのパスワード */
 		private var _password:ByteArray;
@@ -58,6 +62,7 @@ package com.coltware.airxzip {
 			_stream.addEventListener(IOErrorEvent.IO_ERROR,ioError);
 			_unzipStack = new Array();
 			_entries = new Array();
+			_decryptors = new Array();
 		}
 		
 		/**
@@ -95,7 +100,6 @@ package com.coltware.airxzip {
 		 * 
 		 */
 		public function open(file:File):void{
-			//log.debug("ZipEndRecord " + file.nativePath);
 			_file = file;
 			_stream.open(_file,FileMode.READ);
 			
@@ -130,6 +134,12 @@ package com.coltware.airxzip {
 			if(_stream){
 				_stream.close();
 			}
+		}
+		/**
+		 *   Add decrypto instance
+		 */
+		public function addDecrypto(crypto:ICrypto):void{
+			this._decryptors.push(crypto);
 		}
 		
 		public function setPasswordBytes(bytes:ByteArray):void{
@@ -182,13 +192,20 @@ package com.coltware.airxzip {
 			}
 			
 			if(entry.isEncrypted()){
-				
 				if(this._password == null){
 					throw new ZipError("password is NULL");
 				}
 				
-				// @TODO 現在はZipCryptoとみなす
-				var decrypt:ZipCrypto = new ZipCrypto();
+				var decrypt:ICrypto = null;
+				for(var i:int=0;(i<_decryptors.length && decrypt == null); i++){
+					var _decrypt:ICrypto = _decryptors[i];
+					if(_decrypt.checkDecrypt(entry)){
+						decrypt = _decrypt;
+					}
+				}
+				if(decrypt == null){
+					decrypt = new ZipCrypto();
+				}
 				decrypt.initDecrypt(this._password,lzh);
 				bytes = decrypt.decrypt(bytes);
 			}
@@ -264,10 +281,19 @@ package com.coltware.airxzip {
 					return;
 				}
 				
-        // @TODO 現在はZipCryptoとみなす
-        var decrypt:ZipCrypto = new ZipCrypto();
-        decrypt.initDecrypt(this._password,lzh);
-        try{
+        var decrypt:ICrypto = null;
+				for(var i:int=0;(i<_decryptors.length && decrypt == null); i++){
+					var _decrypt:ICrypto = _decryptors[i];
+					if(_decrypt.checkDecrypt(entry)){
+						decrypt = _decrypt;
+					}
+				}
+				if(decrypt == null){
+					decrypt = new ZipCrypto();
+				}
+				decrypt.initDecrypt(this._password,lzh);
+				
+				try{
         	bytes = decrypt.decrypt(bytes);
         }
         catch(ze:ZipError){

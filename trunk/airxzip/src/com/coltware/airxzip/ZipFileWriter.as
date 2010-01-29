@@ -8,6 +8,7 @@
  */
 package com.coltware.airxzip {
 	
+	import com.coltware.airxzip.crypt.ICrypto;
 	import com.coltware.airxzip.crypt.ZipCrypto;
 	
 	import flash.events.*;
@@ -53,6 +54,7 @@ package com.coltware.airxzip {
 		/* 暗号化されているときのパスワード */
     private var _password:ByteArray;
     private var _isCrypt:Boolean = false;
+    private var _crypt:ICrypto;
 		
 		public function ZipFileWriter(hostType:String = "WIN") {
 			_headers = new Array();
@@ -68,6 +70,12 @@ package com.coltware.airxzip {
 			else if(hostType == HOST_UNIX){
 				_host = 3;
 			}
+			
+			_crypt = new ZipCrypto();
+		}
+		
+		public function setCrypto(crypto:ICrypto):void{
+			this._crypt = crypto;
 		}
 		
 		public function setPasswordBytes(bytes:ByteArray):void{
@@ -365,12 +373,7 @@ package com.coltware.airxzip {
 				header._crc32 = ZipCRC32.getByteArrayValue(data);
 				header._uncompressSize = data.length;
 				data.compress(CompressionAlgorithm.DEFLATE);
-				if(_isCrypt){
-				    header._compressSize = data.length + ZipCrypto.CRYPTHEADLEN;
-				}
-				else{
-				    header._compressSize = data.length;
-				}
+				header._compressSize = data.length;
 				
 				if(_host == 3){
 					header._externalFileAttrs = (( ZipHeader.UNIX_FILE | _fileMode ) << 16);
@@ -380,22 +383,21 @@ package com.coltware.airxzip {
 				}
 			}
 			
-			header.writeLocalHeader(_stream);
-			
 			//  実ファイルの書き込み
 			if(isDir == false){
 				data.position = 0;
-				
 				if(_isCrypt){
-					var enc:ZipCrypto = new ZipCrypto();
-					enc.initDecrypt(_password,header);
-					//var cryptHeader:ByteArray = enc.initCrypt(_password,header._crc32);
-					//_stream.writeBytes(cryptHeader);
-					_stream.writeBytes(enc.encrypt(data));
+					_crypt.initEncrypt(_password,header);
+					header.writeLocalHeader(_stream);
+					_stream.writeBytes(_crypt.encrypt(data));
 				}
 				else{
+						header.writeLocalHeader(_stream);
 				    _stream.writeBytes(data);
 				}
+			}
+			else{
+				header.writeLocalHeader(_stream);
 			}
 			
 			_headers.push(header);
