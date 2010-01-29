@@ -46,6 +46,8 @@ package com.coltware.airxzip.crypt {
 			_outBytes = new ByteArray();
 			_initEncrypt(password,crc32);
 			
+			header._compressSize += CRYPTHEADLEN;
+			
 		}
 		
 		/**
