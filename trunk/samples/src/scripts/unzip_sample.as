@@ -2,9 +2,12 @@
 import com.coltware.airxzip.ZipEntry;
 import com.coltware.airxzip.ZipError;
 import com.coltware.airxzip.ZipFileReader;
+import com.coltware.airxzip.*;
 
 import flash.filesystem.File;
 import flash.utils.ByteArray;
+
+use namespace zip_internal;
 
 public function unzip_init(filename:String):ZipFileReader{
 	var reader:ZipFileReader = new ZipFileReader();
@@ -59,5 +62,12 @@ public function unzip_sample3():void{
 				}
 			}
 		}
+	}
+}
+public function unzip_sample4():void{
+	var reader:ZipFileReader = unzip_init("abc.zip");
+	var list:Array = reader.getEntries();
+	for each(var entry:ZipEntry in list){
+		entry.dumpLogInfo();
 	}
 }

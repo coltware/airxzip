@@ -35,5 +35,6 @@
 		<mx:Button label="run unzip sample1( show info )" click="unzip_sample1()" />
 		<mx:Button label="run unzip sample2( read data )" click="unzip_sample2()" />
 		<mx:Button label="run unzip sample2( read crypto data )" click="unzip_sample3()" />
+		<mx:Button label="show zip info" click="unzip_sample4()" />
 	</mx:VBox>
 </mx:WindowedApplication>
