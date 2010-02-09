@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="airxzip" basedir="..">
+	<!-- FLEX SDKの設定 -->
+	<!--  ******* 以下　環境に合わせて書き直すこと ************* -->
+	
+	<property name="REVISION" value="5" />
+	<property name="FLEX_SDK" value="C:\Flex\sdk\3.4" />
+	<property name="FLEX_HOME" value="${FLEX_SDK}" />
+	<property name="PRJ_ROOT" value="${basedir}/../" />
+	
+	<property name="load-config" value="-load-config '${FLEX_SDK}/frameworks/air-config.xml'" />
+	
+	<!-- ソースのディレクトリ -->
+	<property name="SRC_PATH" value="${basedir}/src" />
+	
+	<property name="FLEX_ANT" value="${FLEX_SDK}/ant/lib" />
+	<property name="FLEX_BIN" value="${FLEX_SDK}/bin" />
+	<taskdef resource="flexTasks.tasks" classpath="${FLEX_SDK}/ant/lib/flexTasks.jar"></taskdef>
+	<!-- 
+	**********************************************************************
+	ASDOC のための設定 
+	**********************************************************************
+	-->
+	<!--  addocの出力フォルダ -->
+	<property name="ASDOC_DIR" value="${basedir}/dist/asdoc" />
+	
+	<!--
+	*********************************************************************
+	ここからターゲット処理
+	*********************************************************************
+	-->
+	<target name="asdoc">
+		<exec executable="${FLEX_BIN}/asdoc.exe">
+			<arg line="-source-path ${SRC_PATH} -doc-sources ${SRC_PATH} -output ${ASDOC_DIR} ${load-config}"/>
+			<env key="JAVA_HOME" value="${java.home}"/>
+		</exec>
+	</target>
+	
+	<target name="compc">
+		<compc output="dist/coltware_airxzip_r${REVISION}.swc">
+			<load-config filename="${FLEX_SDK}/frameworks/air-config.xml" />
+			<source-path path-element="${basedir}/src" />
+			<include-sources dir="${basedir}/src" includes="*" />
+			<include-libraries file="${basedir}/libs" />
+		</compc>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${ASDOC_DIR}"></delete>
+	</target>
+</project>
