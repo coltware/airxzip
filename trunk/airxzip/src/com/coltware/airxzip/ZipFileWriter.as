@@ -366,6 +366,21 @@ package com.coltware.airxzip {
 					header._externalFileAttrs = ZipHeader.WIN_DIR;
 				}
 			}
+			else if(data.length == 0){
+				header._compressMethod = 0;
+				header._version = 10;
+				header._versionBy = (_host << 8 | 10);
+				header._crc32 = 0;
+				header._compressSize = 0;
+				header._uncompressSize = 0;
+				
+				if(_host == 3){
+					header._externalFileAttrs = (( ZipHeader.UNIX_FILE | _fileMode ) << 16);
+				}
+				else{
+					header._externalFileAttrs = ZipHeader.WIN_FILE;
+				}
+			}
 			else{
 				header._compressMethod = 8;
 				header._version = 20;
