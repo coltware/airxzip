@@ -37,12 +37,26 @@ package com.coltware.airxzip {
 			_header = h;
 		}
 		
+		public function getHeader():ZipHeader{
+			return _header;
+		}
+		
 		/**
 		*  圧縮方式を返す
 		*
 		*/
 		public function getCompressMethod():int{
 			return _header.getCompressMethod();
+		}
+		
+		public function isCompressed():Boolean{
+			var method:int = _header.getCompressMethod();
+			if(method == 0){
+				return false;
+			}
+			else{
+				return true;
+			}
 		}
 		
 		/**
