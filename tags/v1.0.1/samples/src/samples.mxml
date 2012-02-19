@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()">
+	<mx:Script source="scripts/zip_sample.as" />
+	<mx:Script source="scripts/unzip_sample.as" />
+	<mx:Script>
+		<![CDATA[
+			import mx.logging.ILogger;
+			import mx.logging.Log;
+			import mx.logging.LogEventLevel;
+			import mx.logging.targets.TraceTarget;
+			
+			public static var log:ILogger = Log.getLogger("samples");
+			
+			private function init():void{
+				var target:TraceTarget = new TraceTarget();
+				target.filters = ["*"];
+				target.level = LogEventLevel.DEBUG;
+				target.includeDate = true;
+				target.includeLevel = true;
+				Log.addTarget(target);
+				trace("init end");
+			}
+		]]>
+	</mx:Script>
+	<mx:VBox verticalAlign="middle" horizontalAlign="center">
+		<mx:Label text="ZIP SAMPLES" />
+		<mx:Button label="run sample1" click="zip_sample1()" />
+		<mx:Label text="通常のZIPファイルを作成します。" />
+		<mx:Button label="run sample2" click="zip_sample2()" />
+		<mx:Label text="通常のZIPファイルを非同期処理を使って作成します。" />
+		<mx:Button label="run sample3" click="zip_sample3()" />
+		<mx:Label text="ZIPファイルにパスワードをつけます。" />
+		<!-- ******** UNZIP SAMPLE ******** -->
+		<mx:Label text="UNZIP SAMPLES" />
+		<mx:Button label="run unzip sample1( show info )" click="unzip_sample1()" />
+		<mx:Button label="run unzip sample2( read data )" click="unzip_sample2()" />
+		<mx:Button label="run unzip sample2( read crypto data )" click="unzip_sample3()" />
+		<mx:Button label="show zip info" click="unzip_sample4()" />
+	</mx:VBox>
+</mx:WindowedApplication>
